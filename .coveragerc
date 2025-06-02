@@ -1,0 +1,24 @@
+[run]
+source =
+    main
+    cdk
+omit =
+    tests/*
+    */__pycache__/*
+    setup.py
+    .env/*
+    venv/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == "__main__":
+    pass
+
+[html]
+directory = coverage_html
+
+[xml]
+output = coverage.xml
