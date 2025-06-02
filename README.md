@@ -56,7 +56,6 @@ pytest tests/test_main.py -v
 
 3. Run infrastructure tests:
 ```bash
-cdk
 pytest tests/test_stack.py -v
 ```
 
@@ -64,6 +63,23 @@ pytest tests/test_stack.py -v
 ```bash
 pytest --cov=. tests/
 ```
+
+### Development Testing Workflow
+
+The project includes a GitHub Actions workflow for testing code in development:
+
+- Triggers on push to `dev` and `feature/*` branches
+- Triggers on pull requests to `dev` branch
+- Sets up Python and MongoDB environment
+- Runs all tests with coverage reporting
+- Uploads coverage reports to Codecov
+
+Required repository secrets for dev testing:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `AWS_S3_BUCKET`
+- `CODECOV_TOKEN` (for coverage reporting)
 
 ## Deployment
 

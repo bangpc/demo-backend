@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-from aws_cdk import App, Stack
+from aws_cdk import App, Stack, Environment
 from constructs import Construct
 from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_elasticloadbalancingv2 as elbv2
 from aws_cdk import aws_autoscaling as autoscaling
 from aws_cdk import Duration
+import os
 
 class DemoBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -86,5 +87,14 @@ class DemoBackendStack(Stack):
         )
 
 app = App()
-DemoBackendStack(app, "DemoBackendStack")
+stack = DemoBackendStack(app, "DemoBackendStack",
+    env=Environment(
+        account=os.getenv('CDK_DEFAULT_ACCOUNT'),
+        region=os.getenv('CDK_DEFAULT_REGION')
+    ),
+    tags={
+        'environment': 'production',
+        'requires-approval': 'true'
+    }
+)
 app.synth()
