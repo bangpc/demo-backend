@@ -6,6 +6,10 @@ The project uses AWS CDK with Python to define the cloud infrastructure. The sta
 - Lambda function
 - API Gateway
 
+### Infrastructure Testing
+
+Infrastructure tests for the CDK stack are located in `tests/test_stack.py`. These tests verify that key AWS resources (such as VPC and ALB) are present in the synthesized CloudFormation template.
+
 ## Setup
 
 1. Install Python dependencies:
