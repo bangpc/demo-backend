@@ -96,4 +96,18 @@ This project uses GitHub Actions for automated deployment to AWS using CDK. To s
 
 2. Push changes to the main/master branch to trigger automatic deployment.
 
-3. Monitor the deployment in the Actions tab of your GitHub repository.
+### Manual CDK Deployment
+
+You can deploy to different environments using the following commands:
+
+**Test environment:**
+```bash
+cd cdk
+python app_test.py
+```
+
+**Production environment:**
+```bash
+cd cdk
+python app_prod.py
+```

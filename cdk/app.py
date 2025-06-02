@@ -86,15 +86,35 @@ class DemoBackendStack(Stack):
             )
         )
 
+def create_stack(app, stack_name, env, tags):
+    DemoBackendStack(
+        app, stack_name,
+        env=env,
+        tags=tags
+    )
+
 app = App()
-stack = DemoBackendStack(app, "DemoBackendStack",
-    env=Environment(
-        account=os.getenv('CDK_DEFAULT_ACCOUNT'),
-        region=os.getenv('CDK_DEFAULT_REGION')
-    ),
-    tags={
-        'environment': 'production',
-        'requires-approval': 'true'
-    }
+
+# For production
+prod_env = Environment(
+    account=os.getenv('CDK_DEFAULT_ACCOUNT'),
+    region=os.getenv('CDK_DEFAULT_REGION')
 )
+prod_tags = {
+    'environment': 'production',
+    'requires-approval': 'true'
+}
+create_stack(app, "DemoBackendStackProd", prod_env, prod_tags)
+
+# For testing
+test_env = Environment(
+    account=os.getenv('CDK_DEFAULT_ACCOUNT'),
+    region=os.getenv('CDK_DEFAULT_REGION')
+)
+test_tags = {
+    'environment': 'test',
+    'requires-approval': 'false'
+}
+create_stack(app, "DemoBackendStackTest", test_env, test_tags)
+
 app.synth()
