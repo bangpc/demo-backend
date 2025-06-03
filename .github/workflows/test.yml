@@ -67,7 +67,7 @@ jobs:
       #   run: |
       #     python -m pytest
       #     python app.py
-          
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         env:
@@ -92,14 +92,26 @@ jobs:
           pip install -r requirements.txt
           pip install aws-cdk-lib
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Install AWS CDK CLI
+        run: npm install -g aws-cdk
 
-      - name: Deploy CDK Test Stack
+      # - name: Run CDK tests
+      #   working-directory: ./cdk
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_REGION: ${{ secrets.AWS_REGION }}
+      #   run: |
+      #     python -m pytest
+      #     python app.py
+
+      - name: CDK Synth
         working-directory: ./cdk
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          EC2_KEY_NAME: ${{ secrets.EC2_KEY_NAME }}
         run: |
-          python app_test.py
+          cdk synth
+          cdk deploy

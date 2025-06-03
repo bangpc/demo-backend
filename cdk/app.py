@@ -2,9 +2,6 @@
 from aws_cdk import App, Stack, Environment
 from constructs import Construct
 from aws_cdk import aws_ec2 as ec2
-from aws_cdk import aws_elasticloadbalancingv2 as elbv2
-from aws_cdk import aws_autoscaling as autoscaling
-from aws_cdk import Duration
 import os
 
 class DemoBackendStack(Stack):
@@ -12,78 +9,42 @@ class DemoBackendStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Create VPC
-        vpc = ec2.Vpc(self, "DemoVPC",
-            max_azs=2
-        )
+        vpc = ec2.Vpc(self, "DemoVPC", max_azs=2)
 
-        # Create Security Group
-        security_group = ec2.SecurityGroup(
-            self, "DemoSecurityGroup",
+        # Security Group for EC2
+        ec2_sg = ec2.SecurityGroup(
+            self, "DemoEC2SecurityGroup",
             vpc=vpc,
             allow_all_outbound=True
         )
-        # Allow HTTP traffic
-        security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(80),
-            "Allow HTTP"
-        )
-        # Allow HTTPS traffic
-        security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(443),
-            "Allow HTTPS"
+        ec2_sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(80), "Allow HTTP")
+        ec2_sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(22), "Allow SSH")
+
+        # UserData script to install Docker and run your image
+        dockerhub_username = os.getenv("DOCKERHUB_USERNAME", "yourdockerhubuser")
+        image_name = f"{dockerhub_username}/demo-backend-stg:latest"
+        user_data = ec2.UserData.for_linux()
+        user_data.add_commands(
+            "yum update -y",
+            "amazon-linux-extras install docker -y",
+            "service docker start",
+            "usermod -a -G docker ec2-user",
+            f"docker login -u {dockerhub_username} -p $(aws ssm get-parameter --name /dockerhub/password --with-decryption --query Parameter.Value --output text --region {os.getenv('CDK_DEFAULT_REGION', 'us-east-1')})",
+            f"docker pull {image_name}",
+            f"docker run -d -p 80:80 {image_name}"
         )
 
-        # Create ALB Security Group
-        alb_security_group = ec2.SecurityGroup(
-            self, "DemoALBSecurityGroup",
-            vpc=vpc,
-            allow_all_outbound=True
-        )
-        alb_security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(80),
-            "Allow HTTP ALB"
-        )
-        alb_security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(443),
-            "Allow HTTPS ALB"
-        )
-
-        # Create Auto Scaling Group
-        asg = autoscaling.AutoScalingGroup(
-            self, "DemoASG",
-            vpc=vpc,
-            instance_type=ec2.InstanceType.of(
-                ec2.InstanceClass.T3,
-                ec2.InstanceSize.MICRO
-            ),
+        # EC2 Instance
+        ec2.Instance(
+            self, "DemoBackendEC2",
+            instance_type=ec2.InstanceType("t3.micro"),
             machine_image=ec2.AmazonLinuxImage(),
-            min_capacity=1,
-            max_capacity=3,
-            security_group=security_group
-        )
-
-        # Create Application Load Balancer with security group
-        alb = elbv2.ApplicationLoadBalancer(
-            self, "DemoALB",
             vpc=vpc,
-            internet_facing=True,
-            security_group=alb_security_group
-        )
-
-        # Add both HTTP and HTTPS listeners
-        http_listener = alb.add_listener("HTTPListener", port=80)
-        http_listener.add_targets("Target",
-            port=80,
-            targets=[asg],
-            health_check=elbv2.HealthCheck(
-                path="/health",
-                healthy_http_codes="200",
-                interval=Duration.seconds(30)
-            )
+            security_group=ec2_sg,
+            user_data=user_data,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            key_name=os.getenv("EC2_KEY_NAME"),  # Optional: for SSH access
+            associate_public_ip_address=True
         )
 
 def create_stack(app, stack_name, env, tags):
