@@ -121,3 +121,12 @@ jobs:
         run: |
           cdk synth --app "python app_test.py"
           cdk deploy --require-approval never --app "python app_test.py"
+      - name: CDK Deploy
+        working-directory: ./cdk
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          EC2_KEY_NAME: ${{ secrets.EC2_KEY_NAME }}
+        run: |
+          cdk deploy --require-approval never --app "python app_test.py"
