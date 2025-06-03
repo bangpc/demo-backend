@@ -21,7 +21,7 @@ class DemoBackendStack(Stack):
         ec2_sg.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(22), "Allow SSH")
 
         # UserData script to install Docker and run your image
-        dockerhub_username = os.getenv("DOCKERHUB_USERNAME", "yourdockerhubuser")
+        dockerhub_username = os.getenv("DOCKERHUB_USERNAME", "")
         image_name = f"{dockerhub_username}/demo-backend-stg:latest"
         user_data = ec2.UserData.for_linux()
         user_data.add_commands(
@@ -43,7 +43,7 @@ class DemoBackendStack(Stack):
             security_group=ec2_sg,
             user_data=user_data,
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
-            key_name=os.getenv("EC2_KEY_NAME"),  # Optional: for SSH access
+            # key_name=os.getenv("EC2_KEY_NAME"),  # Optional: for SSH access
             associate_public_ip_address=True
         )
 
