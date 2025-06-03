@@ -114,4 +114,4 @@ jobs:
           EC2_KEY_NAME: ${{ secrets.EC2_KEY_NAME }}
         run: |
           cdk synth --app "python app_test.py"
-          cdk deploy
+          cdk deploy --require-approval never --app "python app_test.py"
