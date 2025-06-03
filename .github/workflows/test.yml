@@ -90,7 +90,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install aws-cdk-lib
+          pip install aws-cdk_lib
 
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
@@ -113,5 +113,5 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           EC2_KEY_NAME: ${{ secrets.EC2_KEY_NAME }}
         run: |
-          cdk synth
+          cdk synth --app "python app_test.py"
           cdk deploy
