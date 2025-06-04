@@ -111,3 +111,39 @@ python app_test.py
 cd cdk
 python app_prod.py
 ```
+
+## Docker Configuration
+
+To deploy and run the backend Docker image, you need to provide your Docker Hub credentials and AWS region:
+
+- **DOCKERHUB_USERNAME**: Your Docker Hub username.
+- **DOCKERHUB_PASSWORD** or **DOCKERHUB_TOKEN**: Your Docker Hub password or access token.
+- **AWS_REGION**: The AWS region for deployment.
+
+### Local Development
+
+Set these as environment variables in your shell or in a `.env` file at the project root:
+
+```bash
+export DOCKERHUB_USERNAME=your_dockerhub_username
+export DOCKERHUB_PASSWORD=your_dockerhub_password
+export AWS_REGION=us-east-1
+```
+
+Or create a `.env` file:
+
+```
+DOCKERHUB_USERNAME=your_dockerhub_username
+DOCKERHUB_PASSWORD=your_dockerhub_password
+AWS_REGION=us-east-1
+```
+
+### CI/CD (GitHub Actions)
+
+In GitHub Actions workflows, these values should be set as repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN` (recommended over password)
+- `AWS_REGION`
+
+These secrets are referenced in the workflow YAML files and passed as environment variables to the deployment scripts.

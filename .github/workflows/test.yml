@@ -128,5 +128,6 @@ jobs:
           CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           EC2_KEY_NAME: ${{ secrets.EC2_KEY_NAME }}
+          SSH_KEY: cdk-demo-home
         run: |
           cdk deploy --require-approval never --app "python app_test.py"

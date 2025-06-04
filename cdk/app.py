@@ -27,12 +27,12 @@ class DemoBackendStack(Stack):
             assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"),
-                iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchAgentServerPolicy"),
             ]
         )
 
         # UserData script to install Docker and run your image, and install CloudWatch agent
         dockerhub_username = os.getenv("DOCKERHUB_USERNAME", "")
+        # dockerhub_secret = os.getenv("DOCKERHUB_SECRET", "")
         image_name = f"{dockerhub_username}/demo-backend-stg:latest"
         user_data = ec2.UserData.for_linux()
         user_data.add_commands(
@@ -40,37 +40,10 @@ class DemoBackendStack(Stack):
             "amazon-linux-extras install docker -y",
             "service docker start",
             "usermod -a -G docker ec2-user",
-            # Install CloudWatch agent
-            "yum install -y amazon-cloudwatch-agent",
-            # Create CloudWatch agent config file
-            "cat <<EOF > /opt/aws/amazon-cloudwatch-agent/bin/config.json",
-            '{',
-            '  "logs": {',
-            '    "logs_collected": {',
-            '      "files": {',
-            '        "collect_list": [',
-            '          {',
-            '            "file_path": "/var/log/messages",',
-            '            "log_group_name": "/ec2/demo-backend/messages",',
-            '            "log_stream_name": "{instance_id}"',
-            '          },',
-            '          {',
-            '            "file_path": "/var/log/cloud-init.log",',
-            '            "log_group_name": "/ec2/demo-backend/cloud-init",',
-            '            "log_stream_name": "{instance_id}"',
-            '          }',
-            '        ]',
-            '      }',
-            '    }',
-            '  }',
-            '}',
-            "EOF",
-            # Start CloudWatch agent
-            "/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s",
             # Docker login and run
-            f"docker login -u {dockerhub_username} -p $(aws ssm get-parameter --name /dockerhub/password --with-decryption --query Parameter.Value --output text --region {os.getenv('CDK_DEFAULT_REGION', 'us-east-1')})",
+            # f"docker login -u {dockerhub_username} -p {dockerhub_secret}",
             f"docker pull {image_name}",
-            f"docker run -d -p 80:80 {image_name}"
+            f"docker run -d -p 80:8000 {image_name}"
         )
 
         # EC2 Instance
@@ -82,7 +55,7 @@ class DemoBackendStack(Stack):
             security_group=ec2_sg,
             user_data=user_data,
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
-            # key_name=os.getenv("EC2_KEY_NAME"),  # Optional: for SSH access
+            key_name=os.getenv("SSH_KEY"),  # Enable SSH access with provided key pair name
             associate_public_ip_address=True,
             role=ec2_role
         )
