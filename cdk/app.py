@@ -30,18 +30,17 @@ class DemoBackendStack(Stack):
             ]
         )
 
-        # UserData script to install Docker and run your image, and install CloudWatch agent
+        # UserData script to install Docker and run your image, for Ubuntu
         dockerhub_username = os.getenv("DOCKERHUB_USERNAME", "")
-        # dockerhub_secret = os.getenv("DOCKERHUB_SECRET", "")
         image_name = f"{dockerhub_username}/demo-backend-stg:latest"
         user_data = ec2.UserData.for_linux()
         user_data.add_commands(
-            "yum update -y",
-            "amazon-linux-extras install docker -y",
-            "service docker start",
-            "usermod -a -G docker ec2-user",
+            "apt-get update -y",
+            "apt-get install -y docker.io",
+            "systemctl start docker",
+            "systemctl enable docker",
+            "usermod -aG docker ubuntu",
             # Docker login and run
-            # f"docker login -u {dockerhub_username} -p {dockerhub_secret}",
             f"docker pull {image_name}",
             f"docker run -d -p 80:8000 {image_name}"
         )
@@ -50,7 +49,9 @@ class DemoBackendStack(Stack):
         ec2.Instance(
             self, "DemoBackendEC2",
             instance_type=ec2.InstanceType("t3.micro"),
-            machine_image=ec2.AmazonLinuxImage(),
+            machine_image=ec2.MachineImage.generic_linux({
+                "ap-southeast-1": "ami-053b0d53c279acc90"  # Ubuntu 22.04 LTS for us-east-1
+            }),
             vpc=vpc,
             security_group=ec2_sg,
             user_data=user_data,
