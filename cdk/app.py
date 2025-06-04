@@ -48,9 +48,9 @@ class DemoBackendStack(Stack):
         # EC2 Instance
         ec2.Instance(
             self, "DemoBackendEC2",
-            instance_type=ec2.InstanceType("t3.micro"),
+            instance_type=ec2.InstanceType("t3.small"),
             machine_image=ec2.MachineImage.generic_linux({
-                "ap-southeast-1": "ami-053b0d53c279acc90"  # Ubuntu 22.04 LTS for us-east-1
+                "ap-southeast-1": "ami-01938df366ac2d954"  # Ubuntu 22.04 LTS for us-east-1
             }),
             vpc=vpc,
             security_group=ec2_sg,
@@ -58,7 +58,17 @@ class DemoBackendStack(Stack):
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             key_name=os.getenv("SSH_KEY"),  # Enable SSH access with provided key pair name
             associate_public_ip_address=True,
-            role=ec2_role
+            role=ec2_role,
+            block_devices=[
+                ec2.BlockDevice(
+                    device_name="/dev/sda1",
+                    volume=ec2.BlockDeviceVolume.ebs(
+                        volume_size=16,  # Size in GiB
+                        volume_type=ec2.EbsDeviceVolumeType.GP3,
+                        delete_on_termination=True
+                    )
+                )
+            ]
         )
 
 def create_stack(app, stack_name, env, tags):
